@@ -42,11 +42,11 @@ class mongoImporter():
 
     def store_listings(self, listing_json):
         col = self.mongo_db['listings']
-        col.insert(listing_json)
+        col.insert_many(listing_json)
     
     def store_details(self, details_json):
         col = self.mongo_db['details']
-        col.insert(details_json)
+        col.insert_many(details_json)
     
 
 if __name__ == "__main__":
