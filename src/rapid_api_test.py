@@ -47,6 +47,12 @@ class mongoImporter():
     def store_details(self, details_json):
         col = self.mongo_db['details']
         col.insert_many(details_json)
+
+    def pull_one_listing(self):
+        col = self.mongo_db['listings']
+        query = col.find_one()
+        return query.get('properties')[0]
+
     
 
 if __name__ == "__main__":
@@ -55,7 +61,22 @@ if __name__ == "__main__":
     '''
     Wednesday November 25, 2020: Can access photos using deatils api. Will need to test if I can dl.
     '''
-    listing_json = listings_query()
+    # listing_json = listings_query()
 
     importer = mongoImporter()
-    importer.store_listings(listing_json)
+    test = importer.pull_one_listing()
+    # importer.store_listings(listing_json)
+    pprint.pprint(test)
+    # pprint.pprint(test.get('properties')[0].get('property_id'))
+
+    '''
+    Proposed data pipe structure:
+     - ping listings API for 200 most recent listings in all 7 metros, daily
+        - Denver, Aurora, Thornton, Littleton, Wesminster, Centennial, Englewood
+     - Store in mongo, schema: document = query(dict with fields 'id_', 'meta', 'properties')
+     - Pull data from mongo to postgres, in more structured form
+     - Weekly, ping details API for listing details
+     - store in mongo
+     - add in sql table with 'photo_id' as PK
+     - dl photos to make dir for ML model
+    '''
