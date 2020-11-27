@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     '''
     Proposed data pipe structure:
-     - ping listings API for 200 most recent listings in all 7 metros, daily
+     - ping listings API for 200 most recent listings in all 7 metros, weekly
         - Denver, Aurora, Thornton, Littleton, Wesminster, Centennial, Englewood
      - Store in mongo, schema: document = query(dict with fields 'id_', 'meta', 'properties')
      - Pull data from mongo to postgres, in more structured form
@@ -79,4 +79,13 @@ if __name__ == "__main__":
      - store in mongo
      - add in sql table with 'photo_id' as PK
      - dl photos to make dir for ML model
+    
+    500 requests/mo limit wi/ free account:
+     - 4*7 = 28 for metrolistings -> 28*200 -> 5600 properties/mo
+     - 472 for details -> 472*20 -> 9440 imgs/mo
+
+    Next Steps:
+     - Incorporate pipelines into airflow, webapp
+     - Incorporate datavis (tableau)
+     - Incorporate style-based, recommender
     '''
