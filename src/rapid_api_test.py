@@ -1,7 +1,10 @@
 import requests
 import os
 import pprint
+
 import pymongo
+import psycopg2
+
 
 def listings_query(city="Denver", limit='200'):
     '''
@@ -35,10 +38,15 @@ def details_query(property_id):
     response = requests.request("GET", url, headers=headers, params=querystring)
     return response.json()
 
-class mongoImporter():
+class dbConnector():
     def __init__(self):
         self.mongo_client = pymongo.MongoClient('localhost', 27017)
         self.mongo_db = self.mongo_client['RealtorStore']
+
+        self.sql_client = psycopg2.connect(
+            dbname='realtor_api_listings', user='postgres', password='password',
+            host='localhost', port='5432'
+        )
 
     def store_listings(self, listing_json):
         col = self.mongo_db['listings']
@@ -48,30 +56,37 @@ class mongoImporter():
         col = self.mongo_db['details']
         col.insert_many(details_json)
 
-    def pull_one_listing(self):
+    def pull_listings(self, one_listing=True):
         col = self.mongo_db['listings']
         query = col.find_one()
-        return query.get('properties')[0]
+        if one_listing:
+            return query.get('properties')[0]
+        else:
+            return query.get('properties')
+
+
+    def pull_query_meta(self):
+        col = self.mongo_db['listings']
+        query = col.find_one()
+        return query.get('meta')
+
+    # def to_sql(self):
+    #     cur = self.sql_client.cursor()
 
     
 
 if __name__ == "__main__":
-    # prop_id = test.get('properties')[0].get('property_id')
+    importer = dbConnector()
+    # test = importer.pull_query_meta()
+    test = importer.pull_listings()
 
-    '''
-    Wednesday November 25, 2020: Can access photos using deatils api. Will need to test if I can dl.
-    '''
-    # listing_json = listings_query()
-
-    importer = mongoImporter()
-    test = importer.pull_one_listing()
-    # importer.store_listings(listing_json)
     pprint.pprint(test)
-    # pprint.pprint(test.get('properties')[0].get('property_id'))
+
+    
 
     '''
     Proposed data pipe structure:
-     - ping listings API for 200 most recent listings in all 7 metros, weekly
+     - ping listings API for 200 most recent listings in all 7 metros, weekly - sort search result by date posted
         - Denver, Aurora, Thornton, Littleton, Wesminster, Centennial, Englewood
      - Store in mongo, schema: document = query(dict with fields 'id_', 'meta', 'properties')
      - Pull data from mongo to postgres, in more structured form
@@ -88,4 +103,49 @@ if __name__ == "__main__":
      - Incorporate pipelines into airflow, webapp
      - Incorporate datavis (tableau)
      - Incorporate style-based, recommender
+    '''
+
+    '''
+    SQL Schema
+    - Search Table (listing_query)
+        - query_id, serial, PK
+        - city, varchar(20)
+        - state, varchar(2)
+        - property_status, varchar(15)
+        - query_date, timestamp
+        - query_sort, varchar(15)
+
+    - Listings Table (listing_data)
+        - listing_id, serial, PK
+        - query_id, int, FK
+        - page, int
+        - page_rank, int
+        - last_update, timestamp
+        - listing_price, int
+        - property_type, varchar(20)
+        - realtor_listing_id, int
+        - mls_id, int
+        - property_id, int
+        - city, varchar(20)
+        - state, varchar(2)
+        - county, varchar(20)
+        - zipcode, int
+        - neighborhood, varchar(20)
+        - address_line, varchar(30)
+        - lat, numeric(8,5)
+        - long, numeric(8,5)
+        - baths, numeric(3,1)
+        - beds, int
+        - building_size, int
+        - building_units, varchar(10)
+        - lot_size, int
+        - lot_units, varchar(10)
+
+
+    - Photo Table (listing_images)
+        - photo_id, serial, PK
+        - query_id, int, FK
+        - listing_id, int, FK
+        - photo_url, varchar(50)
+        - S3_location, varchar(50)
     '''
