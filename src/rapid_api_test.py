@@ -108,12 +108,22 @@ if __name__ == "__main__":
     '''
     SQL Schema
     - Search Table (listing_query)
-        - query_id, serial, PK
+        - listing_query_id, serial, PK
         - city, varchar(20)
         - state, varchar(2)
         - property_status, varchar(15)
         - query_date, timestamp
         - query_sort, varchar(15)
+
+    CREATE TABLE LISTING_QUERY(
+        LISTING_QUERY_ID INT GENERATED ALWAYS AS IDENTITY,
+        CITY VARCHAR(20) NOT NULL,
+        STATE VARCHAR(2) NOT NULL,
+        PROPERTY_STATUS VARCHAR(15) NOT NULL,
+        QUERY_DATE TIMESTAMP NOT NULL,
+        QUERY_SORT VARCHAR(15) NOT NULL,
+        PRIMARY KEY(LISTING_QUERY_ID)
+    );
 
     - Listings Table (listing_data)
         - listing_id, serial, PK
@@ -125,7 +135,7 @@ if __name__ == "__main__":
         - property_type, varchar(20)
         - realtor_listing_id, int
         - mls_id, int
-        - property_id, int
+        - property_id, VARCHAR(15)
         - city, varchar(20)
         - state, varchar(2)
         - county, varchar(20)
@@ -141,6 +151,40 @@ if __name__ == "__main__":
         - lot_size, int
         - lot_units, varchar(10)
 
+    CREATE TABLE LISTING(
+        LISTING_ID INT GENERATED ALWAYS AS IDENTITY,
+        LISTING_QUERY_ID INT NOT NULL,
+        PAGE INT NOT NULL,
+        PAGE_RANK INT NOT NULL,
+        LAST_UPDATE TIMESTAMP NOT NULL,
+        LISTING_PRICE INT NOT NULL,
+        PROPERTY_TYPE VARCHAR(20) NOT NULL,
+        REALTOR_LISTING_ID INT NOT NULL,
+        MLS_ID INT NOT NULL,
+        PROPERTY_ID VARCHAR(15) NOT NULL,
+        CITY VARCHAR(20) NOT NULL,
+        STATE VARCHAR(2) NOT NULL,
+        COUNTY VARCHAR(20) NOT NULL,
+        ZIPCODE INT NOT NULL,
+        NEIGHBORHOOD VARCHAR(20) NOT NULL,
+        ADDRESS_LINE VARCHAR(30) NOT NULL,
+        LAT NUMERIC(8,5) NOT NULL,
+        LONG NUMERIC(8,5) NOT NULL,
+        BATHS NUMERIC(3,1) NOT NULL,
+        BEDS INT NOT NULL,
+        BUILDING_SIZE INT NOT NULL,
+        BUILDING_UNITS VARCHAR(10) NOT NULL,
+        LOT_SIZE INT NOT NULL,
+        LOT_UNITS VARCHAR(10) NOT NULL,
+        PRIMARY KEY(LISTING_ID),
+        CONSTRAINT FK_QUERY
+            FOREIGN KEY(LISTING_QUERY_ID)
+                REFERENCES LISTING_QUERY(LISTING_QUERY_ID)
+    );
+
+    - details query
+        - 
+
 
     - Photo Table (listing_images)
         - photo_id, serial, PK
@@ -148,4 +192,16 @@ if __name__ == "__main__":
         - listing_id, int, FK
         - photo_url, varchar(50)
         - S3_location, varchar(50)
+        - (from detailsAPI query)
+
+    CREATE TABLE IMAGES(
+        IMAGE_ID INT GENERATED ALWAYS AS IDENTITY,
+        QUERY_ID INT NOT NULL,
+        LISTING_ID INT NOT NULL,
+        IMAGE_URL VARCHAR(100)
+        PRIMARY KEY(IMAGE_ID),
+        CONSTRAINT FK_QUERY
+            FOREIGN KEY(QUERY_ID)
+                REFERENCES QUERY(QUERY_ID)
+    );
     '''
