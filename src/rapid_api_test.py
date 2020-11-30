@@ -53,10 +53,14 @@ class dbConnector():
         col.insert_many(listing_json)
     
     def store_details(self, details_json):
+        '''
+        Need to add ability to detect single dict or multiple dicts
+        maybe a try exept
+        '''
         col = self.mongo_db['details']
         col.insert_many(details_json)
 
-    def pull_listings(self, one_listing=True):
+    def pull_listing(self, one_listing=True):
         col = self.mongo_db['listings']
         query = col.find_one()
         if one_listing:
@@ -64,11 +68,18 @@ class dbConnector():
         else:
             return query.get('properties')
 
-
     def pull_query_meta(self):
         col = self.mongo_db['listings']
         query = col.find_one()
         return query.get('meta')
+
+    def pull_listing_details(self, one_listing=True):
+        col = self.mongo_db['details']
+        query = col.find_one()
+        if one_listing:
+            return query.get('properties')[0]
+        else:
+            return query.get('properties')
 
     # def to_sql(self):
     #     cur = self.sql_client.cursor()
@@ -77,10 +88,14 @@ class dbConnector():
 
 if __name__ == "__main__":
     test_prop_id = 'M1293979562'
-    test = details_query(test_prop_id)
+    # test = details_query(test_prop_id)
 
 
     conn = dbConnector()
+    test = conn.pull_listing_details()
+
+    breakpoint()
+    # conn.store_details(test)
     # test = importer.pull_query_meta()
     # test = importer.pull_listings()
 
