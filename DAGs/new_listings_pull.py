@@ -15,10 +15,10 @@ args = {
 }
 
 dag = DAG(
-    dag_id='example_python_operator',
+    dag_id='weekly_metro_listings_pull',
     default_args=args,
     schedule_interval=None,
-    tags=['example']
+    tags=['listings_api','Denver Metro']
 )
 
 
