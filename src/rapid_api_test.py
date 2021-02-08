@@ -65,7 +65,7 @@ class dbConnector():
 
         if store_mongo:
             col = self.mongo_db['listings']
-            col.insert_many(listing_json)
+            col.insert_many(response.json())
         
         return response.json()
 
