@@ -48,17 +48,48 @@ class dbConnector():
             host='localhost', port='5432'
         )
 
-    def store_listings(self, listing_json):
-        col = self.mongo_db['listings']
-        col.insert_many(listing_json)
+    def query_listings(self, city="Denver", limit='200', store_mongo=True):
+        '''
+        Query Realtor listings API using RapidAPI
+        '''
+        url = "https://realtor.p.rapidapi.com/properties/v2/list-for-sale"
+        querystring = {"city":city,"limit":limit,"offset":"0","state_code":"CO","sort":"relevance"}
+        api_key = os.environ['RAPID_API_KEY_REALTOR']
+
+        headers = {
+            'x-rapidapi-key': api_key,
+            'x-rapidapi-host': "realtor.p.rapidapi.com"
+            }
+        
+        response = requests.request("GET", url, headers=headers, params=querystring)
+
+        if store_mongo:
+            col = self.mongo_db['listings']
+            col.insert_many(listing_json)
+        
+        return response.json()
+
+    def query_details(self, property_id, store_mongo=True):
+        '''
+        Query Realtor details API using RapidAPI, details API
+        '''
+        url = "https://realtor.p.rapidapi.com/properties/v2/detail"
+        querystring = {"property_id":property_id}
+        api_key = os.environ['RAPID_API_KEY_REALTOR']
+
+        headers = {
+            'x-rapidapi-key': api_key,
+            'x-rapidapi-host': "realtor.p.rapidapi.com"
+            }
+        
+        response = requests.request("GET", url, headers=headers, params=querystring)
+
+        if store_mongo:
+            col = self.mongo_db['details']
+            col.insert_many(response.json())
+        
+        return response.json()
     
-    def store_details(self, details_json):
-        '''
-        Need to add ability to detect single dict or multiple dicts
-        maybe a try exept
-        '''
-        col = self.mongo_db['details']
-        col.insert_many(details_json)
 
     def pull_listing(self, one_listing=True):
         col = self.mongo_db['listings']
