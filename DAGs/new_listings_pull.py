@@ -3,11 +3,22 @@ from __future__ import print_function
 import time
 from builtins import range
 from pprint import pprint
+import requests
+import os
 
+# general airflow
 from airflow.utils.dates import days_ago
-
 from airflow.models import DAG
+from airflow.exceptions import AirflowException
+
+# airflow operators
+from airflow.operators.http_operator import SimpleHttpOperator
+from airflow.sensors.http_sensor import HttpSensor
 from airflow.operators.python_operator import PythonOperator
+
+# hook for AWS DynamoDB
+from airflow.contrib.hooks.aws_hook import AwsHook
+
 
 args = {
     'owner': 'Airflow',
@@ -18,38 +29,66 @@ dag = DAG(
     dag_id='weekly_metro_listings_pull',
     default_args=args,
     schedule_interval=None,
-    tags=['listings_api','Denver Metro']
+    tags=['Realtor_API','Denver Metro']
 )
 
+sensor = HttpSensor(
+    task_id='http_sensor_check',
+    http_conn_id='https://realtor.p.rapidapi.com/',
+    endpoint='properties/v2/list-for-sale',
+    request_params={},
+    response_check=lambda response: "meta" in response.json().keys(),
+    poke_interval=5,
+    dag=dag,
+)
 
-# [START howto_operator_python]
-def print_context(ds, **kwargs):
-    pprint(kwargs)
-    print(ds)
-    return 'Whatever you return gets printed in the logs'
-
-
-run_this = PythonOperator(
-    task_id='print_the_context',
-    provide_context=True,
+# [START listings_api query]
+t1 = SimpleHttpOperator(
+    task_id='listings_query',
+    method='GET',
+    endpoint=
     python_callable=print_context,
     dag=dag,
 )
-# [END howto_operator_python]
+
+t2 = SimpleHttpOperator(
+    task_id='get_op',
+    method='GET',
+    endpoint='get',
+    data={"param1": "value1", "param2": "value2"},
+    headers={},
+    dag=dag,
+)
+# [END listings_api_query]
 
 
 # [START howto_operator_python_kwargs]
-def my_sleeping_function(random_base):
-    """This is a function that will run within the DAG execution"""
-    time.sleep(random_base)
+def listings_query(city, limit):
+    '''
+    Query Realtor listings API using RapidAPI
+    '''
+    url = "https://realtor.p.rapidapi.com/properties/v2/list-for-sale"
+    querystring = {"city":city,"limit":limit,"offset":"0","state_code":"CO","sort":"relevance"}
+    api_key = os.environ['RAPID_API_KEY_REALTOR']
+
+    headers = {
+        'x-rapidapi-key': api_key,
+        'x-rapidapi-host': "realtor.p.rapidapi.com"
+        }
+    
+    response = requests.request("GET", url, headers=headers, params=querystring)
+
+
+    return response.json()
 
 
 # Generate 5 sleeping tasks, sleeping from 0.0 to 0.4 seconds respectively
-for i in range(5):
+cities = ["Denver", "Aurora", "Boulder"]
+for city in cities:
     task = PythonOperator(
-        task_id='sleep_for_' + str(i),
-        python_callable=my_sleeping_function,
-        op_kwargs={'random_base': float(i) / 10},
+        task_id='listings_api_' + city + "_200",
+        python_callable=listings_query,
+        op_kwargs={'city': city, 'limit':"200"},
         dag=dag,
     )
 

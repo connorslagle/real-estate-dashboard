@@ -20,7 +20,7 @@ def listings_query(city="Denver", limit='200'):
         }
     
     response = requests.request("GET", url, headers=headers, params=querystring)
-    return response.json()
+    return response
 
 def details_query(property_id):
     '''
