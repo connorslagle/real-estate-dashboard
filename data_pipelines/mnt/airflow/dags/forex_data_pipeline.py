@@ -104,7 +104,7 @@ with DAG(dag_id="forex_data_pipeline",
 
     sending_email_notification = EmailOperator(
         task_id='sending_email',
-        to='con.slagle@gmail.com',
+        to=os.environ['MY_EMAIL'],
         subject='forex_data_pipeline',
         html_content='<h3>forex_data_pipeline success </h3>'
     )
