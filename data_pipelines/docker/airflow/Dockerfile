@@ -62,6 +62,9 @@ USER airflow
 # Create the folder dags inside $AIRFLOW_HOME
 RUN mkdir -p ${AIRFLOW_HOME}/dags
 
+# Source credentials in bashrc in $AIRFLOW_HOME
+RUN source ${AIRFLOW_HOME}/.bashrc_for_airflow
+
 # Expose ports (just to indicate that this container needs to map port)
 EXPOSE 8080
 
