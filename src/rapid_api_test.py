@@ -1,6 +1,7 @@
 import requests
 import os
 import pprint
+import json
 
 import pymongo
 import psycopg2
@@ -20,6 +21,11 @@ def listings_query(city="Denver", limit='200', page=1):
         }
     
     response = requests.request("GET", url, headers=headers, params=querystring)
+
+    with open('/usr/local/airflow/dags/files/forex_rates.json', 'a') as outfile:
+        json.dump(outdata, outfile)
+        outfile.write('\n')
+
     return response
 
 def details_query(property_id):

@@ -27,7 +27,23 @@ default_args = {
     'retry_delay': timedelta(minutes=5)
 }
 
-def download_rates():   
+def download_listings(city="Denver", limit='200', page=1):
+    '''
+    Query Realtor listings API using RapidAPI
+    '''
+    url = "https://realtor.p.rapidapi.com/properties/v2/list-for-sale"
+    querystring = {"city":city,"limit":limit,"offset":f"{(page-1)*limit}","state_code":"CO","sort":"newest"}
+    api_key = os.environ['RAPID_API_REALTOR_APP_KEY']
+
+    headers = {
+        'x-rapidapi-key': api_key,
+        'x-rapidapi-host': "realtor.p.rapidapi.com"
+        }
+    
+    response = requests.request("GET", url, headers=headers, params=querystring)
+
+    with open('/usr/local/airflow/dags/files/listings_query.json', 'a') as outfile:
+        json.dump(response.json(), outfile)
     
 
 with DAG(dag_id="realtor_api_data_pipeline",
@@ -49,19 +65,8 @@ with DAG(dag_id="realtor_api_data_pipeline",
         timeout=20
     )
 
-    is_listings_file_available = FileSensor(
-        task_id='is_listings_file_available',
-        fs_conn_id='listings_path',
-        filepath='listings_fields.csv',
-        poke_interval=5,
-        timeout=20
+    downloading_listings = PythonOperator(
+        task_id='downloading_listings',
+        python_callable=download_listings
     )
-
-    downloading_rates = PythonOperator(
-        task_id='downloading_rates',
-        python_callable=download_rates
-    )
-
-
-
-        pass
+    
