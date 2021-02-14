@@ -21,7 +21,7 @@ default_args = {
     'depends_on_false': False,
     'email_on_failure': False,
     'email_on_retry': False,
-    'email': 'con.slagle@gmail.com',
+    'email': os.environ['MY_EMAIL'],
     'retries': 1,
     'retry_delay': timedelta(minutes=5)
 }
