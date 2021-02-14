@@ -6,12 +6,12 @@ import pymongo
 import psycopg2
 
 
-def listings_query(city="Denver", limit='200'):
+def listings_query(city="Denver", limit='200', page=1):
     '''
     Query Realtor listings API using RapidAPI
     '''
     url = "https://realtor.p.rapidapi.com/properties/v2/list-for-sale"
-    querystring = {"city":city,"limit":limit,"offset":"0","state_code":"CO","sort":"relevance"}
+    querystring = {"city":city,"limit":limit,"offset":f"{(page-1)*limit}","state_code":"CO","sort":"newest"}
     api_key = os.environ['RAPID_API_KEY_REALTOR']
 
     headers = {

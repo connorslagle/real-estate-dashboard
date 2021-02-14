@@ -15,6 +15,7 @@ import requests
 import json
 import os
 
+
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2021, 2, 8),
@@ -26,8 +27,11 @@ default_args = {
     'retry_delay': timedelta(minutes=5)
 }
 
+def download_rates():   
+    
+
 with DAG(dag_id="realtor_api_data_pipeline",
-        schedule_interval="0 0 * * 0",
+        schedule_interval="0 0 * * *",
         default_args=default_args,
         catchup=False) as dag:
 
@@ -37,12 +41,27 @@ with DAG(dag_id="realtor_api_data_pipeline",
         http_conn_id='forex_api',
         endpoint='properties/v2/list-for-sale/',
         headers={
-            'x-rapidapi-key': os.environ['RAPID_API_KEY_REALTOR'],
+            'x-rapidapi-key': os.environ['RAPID_API_REALTOR_APP_KEY'],
             'x-rapidapi-host': "realtor.p.rapidapi.com"
         },
         response_check=lambda response: "meta" in response.json().keys(),
         poke_interval=5,
         timeout=20
     )
+
+    is_listings_file_available = FileSensor(
+        task_id='is_listings_file_available',
+        fs_conn_id='listings_path',
+        filepath='listings_fields.csv',
+        poke_interval=5,
+        timeout=20
+    )
+
+    downloading_rates = PythonOperator(
+        task_id='downloading_rates',
+        python_callable=download_rates
+    )
+
+
 
         pass
