@@ -15,6 +15,7 @@ import csv
 import requests
 import json
 
+from scripts.aws_helpers import upload_to_s3
 
 default_args = {
     'owner': 'airflow',
@@ -42,9 +43,10 @@ def download_listings(city="Denver", limit='200', page=1):
     
     response = requests.request("GET", url, headers=headers, params=querystring)
 
-    with open('/usr/local/airflow/dags/files/listings_query.json', 'a') as outfile:
+    date = datetime.now().date()
+
+    with open(f'/usr/local/airflow/dags/files/listings_query_{str(date)}.json', 'a') as outfile:
         json.dump(response.json(), outfile)
-    
 
 with DAG(dag_id="realtor_api_data_pipeline",
         schedule_interval="0 0 * * *",
@@ -62,6 +64,16 @@ with DAG(dag_id="realtor_api_data_pipeline",
         hdfs dfs -mkdir -p /listings && \
             hdfs dfs -put -f $AIRFLOW_HOME/dags/files/listings_query.json /listings
     """
+    )
+
+    archive_listings_query = PythonOperator(
+        task_id='archive_listings_query',
+        python_callable=upload_to_s3,
+        op_kwargs={
+            'fpath':'../files/listings_query_{}.json'.format(str(datetime.now().date())),
+            'key':'listings_queries/listings_query_{}.json'.format(str(datetime.now().date())),
+            'bucket':'realtor-api-archive'
+        }
     )
 
     creating_listings_table = HiveOperator(
@@ -95,3 +107,4 @@ with DAG(dag_id="realtor_api_data_pipeline",
             STORED AS TEXTFILE
         """
     )
+
