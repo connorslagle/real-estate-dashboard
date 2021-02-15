@@ -62,8 +62,8 @@ with DAG(dag_id="realtor_api_data_pipeline",
     task_id='saving_listings',
     bash_command="""
         hdfs dfs -mkdir -p /listings && \
-            hdfs dfs -put -f $AIRFLOW_HOME/dags/files/listings_query.json /listings
-    """
+            hdfs dfs -put -f $AIRFLOW_HOME/dags/files/listings_query_{}.json /listings
+    """.format(str(datetime.now().date()))
     )
 
     archive_listings_query = PythonOperator(
@@ -94,11 +94,12 @@ with DAG(dag_id="realtor_api_data_pipeline",
                 long DECIMAL(9,6),
                 neighborhood STRING,
                 listing_price DOUBLE,
-                baths_full DOUBLE,
-                baths INT,
+                baths DOUBLE,
                 beds INT,
                 building_size INT,
                 building_size_units STRING,
+                lot_size INT,
+                lot_size_units STRING,
                 last_update TIMESTAMP,
                 url STRING
                 )
