@@ -261,6 +261,9 @@ services:
       - ~/.bashrc_for_airflow:/usr/local/airflow/.bashrc_for_airflow
     ports:
       - 8080:8080
+
+    env_file:
+      - ./.env
     healthcheck:
       test: [ "CMD", "nc", "-z", "airflow", "8080" ]
       timeout: 45s

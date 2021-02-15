@@ -7,6 +7,10 @@ hdfs dfs -chmod g+w   /user/airflow
 # Move to the AIRFLOW HOME directory
 cd $AIRFLOW_HOME
 
+# add env api keys to container bashrc
+cat .bashrc_for_airflow >> .bashrc
+source .bashrc
+
 # Initiliase the metadatabase
 airflow initdb
 

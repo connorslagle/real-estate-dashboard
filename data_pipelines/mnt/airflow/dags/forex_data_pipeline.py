@@ -1,4 +1,5 @@
 from airflow import DAG
+from airflow.models import Variable
 from airflow.sensors.http_sensor import HttpSensor
 from airflow.contrib.sensors.file_sensor import FileSensor
 from airflow.operators.python_operator import PythonOperator
@@ -13,7 +14,6 @@ from datetime import datetime, timedelta
 import csv
 import requests
 import json
-import os
 
 default_args = {
     'owner': 'airflow',
@@ -21,7 +21,7 @@ default_args = {
     'depends_on_false': False,
     'email_on_failure': False,
     'email_on_retry': False,
-    'email': os.environ['MY_EMAIL'],
+    'email': Variable.get('my_email'),
     'retries': 1,
     'retry_delay': timedelta(minutes=5)
 }
@@ -104,14 +104,14 @@ with DAG(dag_id="forex_data_pipeline",
 
     sending_email_notification = EmailOperator(
         task_id='sending_email',
-        to=os.environ['MY_EMAIL'],
+        to=Variable.get('my_email'),
         subject='forex_data_pipeline',
         html_content='<h3>forex_data_pipeline success </h3>'
     )
 
     sending_slack_notification = SlackAPIPostOperator(
         task_id='sending_slack',
-        token=os.environ['SLACK_API_POST_KEY'],
+        token=Variable.get('slack_api_post_key'),
         username='airflow',
         text='DAG forex_data_pipeline: DONE',
         channel='#airflow-exploit'

@@ -1,4 +1,5 @@
 from airflow import DAG
+from airflow.models import Variable
 from airflow.sensors.http_sensor import HttpSensor
 from airflow.contrib.sensors.file_sensor import FileSensor
 from airflow.operators.python_operator import PythonOperator
@@ -13,7 +14,6 @@ from datetime import datetime, timedelta
 import csv
 import requests
 import json
-import os
 
 
 default_args = {
@@ -22,7 +22,7 @@ default_args = {
     'depends_on_false': False,
     'email_on_failure': True,
     'email_on_retry': False,
-    'emails': [os.environ['MY_EMAIL']],
+    'emails': [Variable.get('my_email')],
     'retries': 1,
     'retry_delay': timedelta(minutes=5)
 }
@@ -33,7 +33,7 @@ def download_listings(city="Denver", limit='200', page=1):
     '''
     url = "https://realtor.p.rapidapi.com/properties/v2/list-for-sale"
     querystring = {"city":city,"limit":limit,"offset":f"{(page-1)*limit}","state_code":"CO","sort":"newest"}
-    api_key = os.environ['RAPID_API_REALTOR_APP_KEY']
+    api_key = Variable.get('rapid_api_realtor_app_key')
 
     headers = {
         'x-rapidapi-key': api_key,
@@ -51,22 +51,47 @@ with DAG(dag_id="realtor_api_data_pipeline",
         default_args=default_args,
         catchup=False) as dag:
 
-    are_listings_available = HttpSensor(
-        task_id='are_listings_available',
-        method='GET',
-        http_conn_id='forex_api',
-        endpoint='properties/v2/list-for-sale/',
-        headers={
-            'x-rapidapi-key': os.environ['RAPID_API_REALTOR_APP_KEY'],
-            'x-rapidapi-host': "realtor.p.rapidapi.com"
-        },
-        response_check=lambda response: "meta" in response.json().keys(),
-        poke_interval=5,
-        timeout=20
-    )
-
     downloading_listings = PythonOperator(
         task_id='downloading_listings',
         python_callable=download_listings
     )
-    
+
+    saving_listings = BashOperator(
+    task_id='saving_listings',
+    bash_command="""
+        hdfs dfs -mkdir -p /listings && \
+            hdfs dfs -put -f $AIRFLOW_HOME/dags/files/listings_query.json /listings
+    """
+    )
+
+    creating_listings_table = HiveOperator(
+        task_id="creating_listings_table",
+        hive_cli_conn_id="hive_conn",
+        hql="""
+            CREATE EXTERNAL TABLE IF NOT EXISTS listings(
+                property_id STRING,
+                query_date TIMESTAMP,
+                query_city STRING,
+                query_state STRING,
+                prop_type STRING,
+                address_line STRING,
+                address_city STRING,
+                zip_code INT,
+                fips_code INT,
+                lat DECIMAL(9,6),
+                long DECIMAL(9,6),
+                neighborhood STRING,
+                listing_price DOUBLE,
+                baths_full DOUBLE,
+                baths INT,
+                beds INT,
+                building_size INT,
+                building_size_units STRING,
+                last_update TIMESTAMP,
+                url STRING
+                )
+            ROW FORMAT DELIMITED
+            FIELDS TERMINATED BY ','
+            STORED AS TEXTFILE
+        """
+    )
