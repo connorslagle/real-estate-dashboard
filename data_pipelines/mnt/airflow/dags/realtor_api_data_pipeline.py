@@ -43,9 +43,7 @@ def download_listings(city="Denver", limit='200', page=1):
     
     response = requests.request("GET", url, headers=headers, params=querystring)
 
-    date = datetime.now().date()
-
-    with open(f'/usr/local/airflow/dags/files/listings_query_{str(date)}.json', 'a') as outfile:
+    with open('/usr/local/airflow/dags/files/listings_query.json', 'a') as outfile:
         json.dump(response.json(), outfile)
 
 with DAG(dag_id="realtor_api_data_pipeline",
@@ -62,16 +60,16 @@ with DAG(dag_id="realtor_api_data_pipeline",
     task_id='saving_listings',
     bash_command="""
         hdfs dfs -mkdir -p /listings && \
-            hdfs dfs -put -f $AIRFLOW_HOME/dags/files/listings_query_{}.json /listings
-    """.format(str(datetime.now().date()))
+            hdfs dfs -put -f $AIRFLOW_HOME/dags/files/listings_query.json /listings
+    """
     )
 
     archive_listings_query = PythonOperator(
         task_id='archive_listings_query',
         python_callable=upload_to_s3,
         op_kwargs={
-            'fpath':'/usr/local/airflow/dags/files/listings_query_{}.json'.format(str(datetime.now().date())),
-            'key':'listings_queries/listings_query_{}.json'.format(str(datetime.now().date())),
+            'fpath':'/usr/local/airflow/dags/files/listings_query.json',
+            'key':'listings_queries/listings_query.json',
             'bucket':'realtor-api-archive'
         }
     )
