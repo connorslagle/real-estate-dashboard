@@ -11,6 +11,10 @@ cd $AIRFLOW_HOME
 cat .bashrc_for_airflow >> .bashrc
 source .bashrc
 
+# add env api keys to profile as well, might be needed for webserver
+cat .bashrc_for_airflow >> .profile
+source .profile
+
 # Initiliase the metadatabase
 airflow initdb
 

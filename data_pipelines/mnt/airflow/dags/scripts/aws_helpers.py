@@ -17,7 +17,8 @@ def upload_to_s3(fpath, key, bucket):
     s3 = boto3.client(
         's3',
         aws_access_key_id=Variable.get('aws_access_key_id'),
-        aws_secret_access_key=Variable.get('aws_secret_access_key')
+        aws_secret_access_key=Variable.get('aws_secret_access_key'),
+        region_name='us-east-1'
     )
 
     s3.upload_file(fpath, bucket, key)
