@@ -116,11 +116,11 @@ with DAG(dag_id="realtor_api_data_pipeline",
     )
 
     sending_slack_notification = SlackAPIPostOperator(
-        task_id='sending_slack',
+        task_id='sending_slack_notification',
         token=Variable.get('slack_api_post_key'),
         username='realtor_api',
         text='DAG realtor_api_data_pipeline: DONE',
         channel='#airflow-exploit'
     )
 
-    download_listings >> saving_listings >> archive_listings_query >> creating_listings_table >> insert_into_listings_table >> sending_slack_notification
+    downloading_listings >> saving_listings >> archive_listings_query >> creating_listings_table >> insert_into_listings_table >> sending_slack_notification
