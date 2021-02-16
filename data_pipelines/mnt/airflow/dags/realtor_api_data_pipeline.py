@@ -70,7 +70,7 @@ with DAG(dag_id="realtor_api_data_pipeline",
         task_id='archive_listings_query',
         python_callable=upload_to_s3,
         op_kwargs={
-            'fpath':'../files/listings_query_{}.json'.format(str(datetime.now().date())),
+            'fpath':'/usr/local/airflow/dags/files/listings_query_{}.json'.format(str(datetime.now().date())),
             'key':'listings_queries/listings_query_{}.json'.format(str(datetime.now().date())),
             'bucket':'realtor-api-archive'
         }
@@ -107,5 +107,11 @@ with DAG(dag_id="realtor_api_data_pipeline",
             FIELDS TERMINATED BY ','
             STORED AS TEXTFILE
         """
+    )
+
+    insert_into_listings_table = SparkSubmitOperator(
+        task_id='insert_into_listings_table',
+        application='/usr/local/airflow/dags/scripts/listings_processing.py',
+        conn_id='spark_submit_conn'
     )
 

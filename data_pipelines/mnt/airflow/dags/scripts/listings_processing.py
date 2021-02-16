@@ -9,7 +9,7 @@ warehouse_location = abspath('spark-warehouse')
 # Initialize Spark Session
 spark = SparkSession \
     .builder \
-    .appName("Listings processing") \
+    .appName("listings processing") \
     .config("spark.sql.warehouse.dir", warehouse_location) \
     .enableHiveSupport() \
     .getOrCreate()
