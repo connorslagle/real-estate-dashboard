@@ -10,10 +10,9 @@ def upload_to_s3(fpath, key, bucket):
     Uploads json to s3 for archiving.
     '''
 
-    # add date to fpath and key
+    # add date to key
     date = datetime.now().date()
-    fpath = fpath.split('.')[0] + '_' + str(date) + fpath.split('.')[1]
-    key = key.split('.')[0] + '_' + str(date) + key.split('.')[1]
+    key = key.split('.')[0] + '_' + str(date) + '.' + key.split('.')[1]
 
     s3 = boto3.client(
         's3',

@@ -19,7 +19,7 @@ from scripts.aws_helpers import upload_to_s3
 
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2021, 2, 8),
+    'start_date': datetime(2021, 2, 15),
     'depends_on_false': False,
     'email_on_failure': True,
     'email_on_retry': False,

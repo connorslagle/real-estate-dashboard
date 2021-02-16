@@ -1,5 +1,4 @@
 from os.path import expanduser, join, abspath
-from datetime import datetime
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, explode
@@ -15,7 +14,7 @@ spark = SparkSession \
     .getOrCreate()
 
 # Read the file forex_rates.json from the HDFS
-df = spark.read.json('hdfs://namenode:9000/listings/listings_query_{}.json'.format(str(datetime.now().date())))
+df = spark.read.json('hdfs://namenode:9000/listings/listings_query.json')
 
 # Expand properties, make new df
 df_listings = df.select(df.meta, explode(df.properties))
