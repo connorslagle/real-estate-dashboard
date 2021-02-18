@@ -99,7 +99,8 @@ with DAG(dag_id="realtor_api_data_pipeline",
                 lot_size INT,
                 lot_size_units STRING,
                 last_update TIMESTAMP,
-                url STRING
+                url STRING,
+                CONSTRAINT prop_id UNIQUE (property_id)
                 )
             ROW FORMAT DELIMITED
             FIELDS TERMINATED BY ','
